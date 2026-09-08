@@ -1,601 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Personal Photo Gallery with persistent storage">
-    <title>GALLERY - Photo Collection</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&family=Cormorant+Garamond:wght@300;400;500&display=swap');
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #faf9f6 0%, #f5f3ef 50%, #f0ede7 100%);
-            color: #2c2c2c;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            padding: 25px 0;
-            border-bottom: 1px solid rgba(44, 44, 44, 0.08);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.02);
-        }
-
-        .nav {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 40px;
-        }
-
-        .logo {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 28px;
-            font-weight: 300;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: #2c2c2c;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 40px;
-            align-items: center;
-        }
-
-        .nav-link {
-            font-size: 11px;
-            font-weight: 400;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #8b8680;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: #2c2c2c;
-        }
-
-        .upload-btn {
-            background: linear-gradient(135deg, #8b8680 0%, #2c2c2c 100%);
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 2px;
-            box-shadow: 0 4px 15px rgba(44, 44, 44, 0.15);
-        }
-
-        .upload-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(44, 44, 44, 0.2);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 60px 40px;
-        }
-
-        .hero-section {
-            text-align: center;
-            margin-bottom: 80px;
-            padding: 40px 0;
-        }
-
-        .hero-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 52px;
-            font-weight: 300;
-            color: #2c2c2c;
-            margin-bottom: 20px;
-            letter-spacing: 3px;
-        }
-
-        .hero-subtitle {
-            font-size: 14px;
-            font-weight: 300;
-            color: #8b8680;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            margin-bottom: 60px;
-        }
-
-        .slideshow-container {
-            position: relative;
-            max-width: 900px;
-            margin: 0 auto 80px;
-            background: #fff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.15);
-            display: none;
-            perspective: 1500px;
-            height: 600px;
-        }
-
-        .slideshow-container.active {
-            display: block;
-        }
-
-        .book-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            transform-style: preserve-3d;
-        }
-
-        .page {
-            position: absolute;
-            width: 50%;
-            height: 100%;
-            background: #fff;
-            backface-visibility: hidden;
-            transform-style: preserve-3d;
-            transform-origin: right center;
-            transition: transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            border-radius: 0 12px 12px 0;
-            overflow: hidden;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-            border-left: 2px solid #f5f5f5;
-            z-index: 1;
-        }
-
-        .page.flipped {
-            transform: rotateY(-180deg);
-            z-index: 0;
-        }
-
-        .page.flipping {
-            z-index: 10;
-            box-shadow: 0 0 30px rgba(0,0,0,0.3);
-        }
-
-        .page-content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-            position: relative;
-        }
-
-        .page-number {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 18px;
-            font-weight: 300;
-            color: rgba(44, 44, 44, 0.4);
-        }
-
-        .page img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .book-spine {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(to bottom, 
-                rgba(0,0,0,0.1) 0%, 
-                rgba(0,0,0,0.2) 50%, 
-                rgba(0,0,0,0.1) 100%);
-            transform: translateX(-50%);
-            z-index: 5;
-        }
-
-        .flip-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.95);
-            border: 1px solid rgba(44, 44, 44, 0.1);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            color: #2c2c2c;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-
-        .flip-nav:hover {
-            background: #2c2c2c;
-            color: white;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .flip-prev {
-            left: -25px;
-        }
-
-        .flip-next {
-            right: -25px;
-        }
-
-        .page-indicator {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px 20px;
-            border-radius: 25px;
-            border: 1px solid rgba(44, 44, 44, 0.1);
-            z-index: 100;
-        }
-
-        .page-counter {
-            font-size: 12px;
-            font-weight: 500;
-            color: #2c2c2c;
-            letter-spacing: 1px;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 80px;
-            margin-bottom: 40px;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 32px;
-            font-weight: 300;
-            color: #2c2c2c;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #a39d95;
-            font-weight: 400;
-        }
-
-        .upload-area {
-            border: 2px dashed rgba(139, 134, 128, 0.3);
-            background: rgba(255, 255, 255, 0.7);
-            padding: 60px 40px;
-            text-align: center;
-            margin-bottom: 60px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border-radius: 8px;
-        }
-
-        .upload-area:hover, .upload-area.dragover {
-            border-color: #8b8680;
-            background: rgba(255, 255, 255, 0.9);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        }
-
-        .upload-icon {
-            font-size: 28px;
-            color: #c4bfb8;
-            margin-bottom: 20px;
-        }
-
-        .upload-text {
-            font-size: 13px;
-            color: #8b8680;
-            font-weight: 300;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-
-        .upload-subtext {
-            font-size: 11px;
-            color: #a39d95;
-            font-weight: 300;
-        }
-
-        .view-toggle {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .toggle-btn {
-            background: transparent;
-            border: 1px solid rgba(139, 134, 128, 0.3);
-            color: #8b8680;
-            padding: 8px 20px;
-            font-size: 10px;
-            font-weight: 500;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 2px;
-        }
-
-        .toggle-btn.active, .toggle-btn:hover {
-            background: #8b8680;
-            color: white;
-            border-color: #8b8680;
-        }
-
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 60px;
-        }
-
-        .photo-card {
-            background: rgba(255, 255, 255, 0.8);
-            position: relative;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            border-radius: 6px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.06);
-        }
-
-        .photo-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
-        }
-
-        .photo-container {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff;
-            min-height: 200px;
-            max-height: 500px;
-            overflow: hidden;
-        }
-
-        .photo-card img {
-            max-width: 100%;
-            max-height: 500px;
-            object-fit: contain;
-            transition: all 0.4s ease;
-        }
-
-        .photo-info {
-            padding: 25px 20px;
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        .photo-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .photo-number {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 48px;
-            font-weight: 300;
-            color: rgba(139, 134, 128, 0.2);
-            line-height: 1;
-        }
-
-        .photo-date {
-            font-size: 10px;
-            color: #a39d95;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-align: right;
-            line-height: 1.4;
-        }
-
-        .photo-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 18px;
-            font-weight: 400;
-            color: #2c2c2c;
-            margin-bottom: 8px;
-        }
-
-        .photo-description {
-            font-size: 11px;
-            color: #8b8680;
-            font-weight: 300;
-            line-height: 1.6;
-        }
-
-        .delete-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(44, 44, 44, 0.8);
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: all 0.3s ease;
-            border-radius: 50%;
-        }
-
-        .photo-card:hover .delete-btn {
-            opacity: 1;
-        }
-
-        .delete-btn:hover {
-            background: rgba(44, 44, 44, 1);
-            transform: scale(1.1);
-        }
-
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 120px 20px;
-        }
-
-        .empty-icon {
-            font-size: 64px;
-            margin-bottom: 30px;
-            opacity: 0.3;
-        }
-
-        .empty-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 32px;
-            font-weight: 300;
-            margin-bottom: 15px;
-            color: #8b8680;
-        }
-
-        .empty-subtitle {
-            font-size: 12px;
-            font-weight: 300;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #a39d95;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(250, 249, 246, 0.98);
-        }
-
-        .modal-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            max-width: 90vw;
-            max-height: 90vh;
-        }
-
-        .modal img {
-            max-width: 100%;
-            max-height: 90vh;
-            object-fit: contain;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 30px;
-            right: 40px;
-            color: #2c2c2c;
-            font-size: 32px;
-            cursor: pointer;
-            z-index: 2001;
-            background: rgba(255, 255, 255, 0.9);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .modal-close:hover {
-            background: rgba(255, 255, 255, 1);
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        .section-divider {
-            width: 80px;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #c4bfb8, transparent);
-            margin: 60px auto;
-        }
-
-        .quote-block {
-            text-align: center;
-            padding: 50px 40px;
-            margin: 80px 0;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 8px;
-        }
-
-        .quote-text {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 22px;
-            font-weight: 300;
-            font-style: italic;
-            color: #8b8680;
-            margin-bottom: 20px;
-        }
-
-        .quote-author {
-            font-size: 10px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #a39d95;
-        }
-
-        @media (max-width: 768px) {
-            .nav { padding: 0 20px; }
-            .container { padding: 40px 20px; }
-            .hero-title { font-size: 36px; }
-            .stats { gap: 40px; }
-            .gallery { grid-template-columns: 1fr; }
-            .nav-link { display: none; }
-            .slideshow-container { height: 500px; }
-            .flip-nav { width: 45px; height: 45px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Personal Photo Gallery with persistent storage, collage view, and animated slideshow">
+<title>GALLERY - Photo Collection</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600&family=Cormorant+Garamond:wght@300;400;500&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, #faf9f6 0%, #f5f3ef 50%, #f0ede7 100%);
+    color: #2c2c2c;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+.bg-blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(70px);
+    opacity: 0.25;
+    z-index: -1;
+    pointer-events: none;
+    animation: floatBlob 24s ease-in-out infinite;
+}
+.blob-1 { width: 380px; height: 380px; background: #d9c9b8; top: -100px; left: -120px; }
+.blob-2 { width: 320px; height: 320px; background: #c8bfae; bottom: -100px; right: -80px; animation-duration: 30s; animation-delay: -6s; }
+.blob-3 { width: 240px; height: 240px; background: #e8ddc9; top: 45%; right: 8%; animation-duration: 20s; animation-delay: -12s; }
+
+@keyframes floatBlob {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    33% { transform: translate(50px,-40px) scale(1.1); }
+    66% { transform: translate(-40px,30px) scale(0.9); }
+}
+
+@media (max-width: 600px) { .bg-blob { display: none; } }
+
+.header {
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(20px);
+    padding: 25px 0;
+    border-bottom: 1px solid rgba(44,44,44,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.02);
+}
+
+.nav { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; }
+.logo { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; letter-spacing: 3px; text-transform: uppercase; }
+.nav-links { display: flex; gap: 40px; align-items: center; }
+
+.nav-link {
+    font-size: 11px; font-weight: 400; letter-spacing: 1.5px; text-transform: uppercase;
+    color: #8b8680; text-decoration: none; position: relative; transition: color 0.3s ease;
+}
+.nav-link::after {
+    content: ''; position: absolute; left: 0; bottom: -4px; width: 0; height: 1px;
+    background: #2c2c2c; transition: width 0.3s ease;
+}
+.nav-link:hover, .nav-link.active { color: #2c2c2c; }
+.nav-link:hover::after, .nav-link.active::after { width: 100%; }
+
+.upload-btn {
+    background: linear-gradient(135deg, #8b8680 0%, #2c2c2c 100%);
+    color: #fff; border: none; padding: 10px 24px; font-size: 10px; font-weight: 500;
+    letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; transition: all 0.3s ease;
+    border-radius: 2px; box-shadow: 0 4px 15px rgba(44,44,44,0.15);
+}
+.upload-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(44,44,44,0.2); }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 60px 40px; }
+
+.hero-section { text-align: center; margin-bottom: 80px; padding: 40px 0; }
+.hero-title { font-family: 'Cormorant Garamond', serif; font-size: 52px; font-weight: 300; margin-bottom: 20px; letter-spacing: 3px; }
+.hero-subtitle { font-size: 14px; font-weight: 300; color: #8b8680; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 60px; }
+
+.stats { display: flex; justify-content: center; gap: 80px; margin-bottom: 40px; }
+.stat-item { text-align: center; }
+.stat-number { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; margin-bottom: 8px; }
+.stat-number.pulse { animation: statPulse 0.4s ease; }
+.stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #a39d95; font-weight: 400; }
+
+@keyframes statPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.18); color: #8b8680; }
+    100% { transform: scale(1); }
+}
+
+.view-toggle { display: flex; justify-content: center; gap: 16px; margin-bottom: 40px; }
+.toggle-btn {
+    background: transparent; border: 1px solid rgba(139,134,128,0.3); color: #8b8680;
+    padding: 8px 20px; font-size: 10px; font-weight: 500; letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; transition: all 0.3s ease; border-radius: 2px;
+}
+.toggle-btn.active, .toggle-btn:hover { background: #8b8680; color: #fff; border-color: #8b8680; }
+
+.upload-area {
+    border: 2px dashed rgba(139,134,128,0.3); background: rgba(255,255,255,0.7); backdrop-filter: blur(10px);
+    padding: 60px 40px; text-align: center; margin-bottom: 60px; transition: all 0.3s ease; cursor: pointer; border-radius: 8px;
+}
+.upload-area:hover { border-color: #8b8680; background: rgba(255,255,255,0.9); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+.upload-area.dragover { border-color: #8b8680; background: rgba(255,255,255,0.95); animation: pulseGlow 1.1s ease infinite; }
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(139,134,128,0.35); }
+    50% { box-shadow: 0 0 0 14px rgba(139,134,128,0); }
+}
+
+.upload-icon { font-size: 28px; color: #c4bfb8; margin-bottom: 20px; }
+.upload-text { font-size: 13px; color: #8b8680; font-weight: 300; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.upload-subtext { font-size: 11px; color: #a39d95; font-weight: 300; }
+#fileInput { display: none; }
+
+.section-divider { width: 80px; height: 1px; background: linear-gradient(90deg, transparent, #c4bfb8, transparent); margin: 60px auto; }
+
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin-top: 60px; }
+
+.photo-card {
+    background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); position: relative; cursor: pointer;
+    transition: transform 0.4s ease, box-shadow 0.4s ease, background 0.4s ease; overflow: hidden;
+    display: flex; flex-direction: column; border-radius: 6px; box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+}
+.photo-card:hover { transform: translateY(-8px); box-shadow: 0 20px 60px rgba(0,0,0,0.12); background: rgba(255,255,255,0.95); }
+.photo-container { width: 100%; display: flex; align-items: center; justify-content: center; background: #fff; min-height: 200px; max-height: 500px; overflow: hidden; }
+.photo-card img { max-width: 100%; max-height: 500px; width: auto; height: auto; object-fit: contain; transition: transform 0.6s ease; }
+.photo-card:hover img { transform: scale(1.06); }
+
+.photo-info { padding: 25px 20px; background: rgba(255,255,255,0.95); }
+.photo-meta { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+.photo-number { font-family: 'Cormorant Garamond', serif; font-size: 48px; font-weight: 300; color: rgba(139,134,128,0.2); line-height: 1; }
+.photo-date { font-size: 10px; color: #a39d95; letter-spacing: 1px; text-transform: uppercase; text-align: right; line-height: 1.4; }
+.photo-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 400; margin-bottom: 8px; }
+.photo-description { font-size: 11px; color: #8b8680; font-weight: 300; line-height: 1.6; }
+
+.delete-btn {
+    position: absolute; top: 15px; right: 15px; background: rgba(44,44,44,0.8); color: #fff; border: none;
+    width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: all 0.3s ease; border-radius: 50%; backdrop-filter: blur(10px);
+}
+.photo-card:hover .delete-btn, .collage-item:hover .delete-btn { opacity: 1; }
+.delete-btn:hover { background: rgba(44,44,44,1); transform: scale(1.1); }
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-in { animation: fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* Collage view */
+.collage-container {
+    display: none; column-count: 4; -webkit-column-count: 4; -moz-column-count: 4;
+    column-gap: 24px; margin-top: 60px; perspective: 1000px;
+}
+@media (max-width: 1024px) { .collage-container { column-count: 3; -webkit-column-count: 3; -moz-column-count: 3; } }
+
+.collage-item {
+    break-inside: avoid; -webkit-column-break-inside: avoid; margin-bottom: 24px;
+    background: #fff; padding: 14px 14px 42px; border-radius: 3px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08);
+    position: relative; cursor: pointer; transform: rotate(var(--rot, 0deg));
+    transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s ease;
+}
+.collage-item:hover { box-shadow: 0 25px 45px rgba(0,0,0,0.2); z-index: 5; }
+.collage-item img { width: 100%; display: block; border-radius: 2px; transition: transform 0.6s ease; }
+.collage-item:hover img { transform: scale(1.1); }
+.collage-caption {
+    position: absolute; bottom: 12px; left: 14px; right: 14px; font-family: 'Cormorant Garamond', serif;
+    font-size: 14px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.collage-pin {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%); width: 16px; height: 16px;
+    background: radial-gradient(circle at 30% 30%, #e57373, #b71c1c); border-radius: 50%;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3); pointer-events: none;
+}
+
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 120px 20px; color: #a39d95; }
+.empty-icon { font-size: 64px; margin-bottom: 30px; opacity: 0.3; }
+.empty-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; margin-bottom: 15px; color: #8b8680; }
+.empty-subtitle { font-size: 12px; font-weight: 300; letter-spacing: 1px; text-transform: uppercase; color: #a39d95; }
+
+.slideshow-container {
+    position: relative; max-width: 900px; margin: 0 auto 80px; background: #fff; border-radius: 12px;
+    overflow: hidden; box-shadow: 0 25px 80px rgba(0,0,0,0.15); display: none; perspective: 1500px; height: 600px;
+}
+.slideshow-container.active { display: block; }
+.book-container { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+
+.page {
+    position: absolute; width: 50%; height: 100%; background: #fff; backface-visibility: hidden;
+    transform-style: preserve-3d; transform-origin: right center; transition: transform 1s cubic-bezier(0.25,0.46,0.45,0.94);
+    border-radius: 0 12px 12px 0; overflow: hidden; box-shadow: 2px 0 10px rgba(0,0,0,0.1); border-left: 2px solid #f5f5f5; z-index: 1;
+}
+.page.flipped { transform: rotateY(-180deg); z-index: 0; }
+.page.flipping { z-index: 10; box-shadow: 0 0 30px rgba(0,0,0,0.3); }
+.page-content { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 30px; position: relative; overflow: hidden; }
+.page-content img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); animation: kenBurns 12s ease-in-out infinite alternate; }
+
+@keyframes kenBurns {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.14); }
+}
+
+.page-number { position: absolute; bottom: 30px; right: 30px; font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; color: rgba(44,44,44,0.4); }
+
+.book-spine {
+    position: absolute; left: 50%; top: 0; width: 4px; height: 100%;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%);
+    transform: translateX(-50%); z-index: 5;
+}
+
+.flip-nav {
+    position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+    border: 1px solid rgba(44,44,44,0.1); width: 50px; height: 50px; border-radius: 50%; cursor: pointer; font-size: 18px;
+    display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; z-index: 100;
+}
+.flip-nav:hover { background: #2c2c2c; color: #fff; transform: translateY(-50%) scale(1.1); }
+.flip-prev { left: -25px; }
+.flip-next { right: -25px; }
+
+.page-indicator {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 25px; border: 1px solid rgba(44,44,44,0.1); z-index: 100;
+}
+.page-counter { font-size: 12px; font-weight: 500; letter-spacing: 1px; }
+
+.modal {
+    position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%;
+    background: rgba(250,249,246,0.98); backdrop-filter: blur(20px);
+    opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.4s ease, visibility 0.4s;
+}
+.modal.show { opacity: 1; visibility: visible; pointer-events: auto; }
+.modal-content {
+    position: absolute; top: 50%; left: 50%; max-width: 90vw; max-height: 90vh; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.15); transform: translate(-50%,-50%) scale(0.9); transition: transform 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+.modal.show .modal-content { transform: translate(-50%,-50%) scale(1); }
+.modal img { max-width: 100%; max-height: 90vh; object-fit: contain; background: #fff; display: block; }
+.modal-close {
+    position: absolute; top: 30px; right: 40px; font-size: 32px; cursor: pointer; z-index: 2001; font-weight: 100;
+    background: rgba(255,255,255,0.9); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; backdrop-filter: blur(10px); transition: all 0.3s ease;
+}
+.modal-close:hover { background: #fff; transform: scale(1.1); }
+
+.quote-block {
+    text-align: center; padding: 50px 40px; margin: 80px 0; background: rgba(255,255,255,0.6); backdrop-filter: blur(15px);
+    border-radius: 8px; border: 1px solid rgba(139,134,128,0.1);
+}
+.quote-text { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; font-style: italic; color: #8b8680; margin-bottom: 20px; line-height: 1.6; }
+.quote-author { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #a39d95; }
+
+.toast {
+    position: fixed; bottom: 30px; right: 30px; background: rgba(44,44,44,0.95); color: #fff; padding: 14px 22px;
+    border-radius: 6px; font-size: 12px; letter-spacing: 0.4px; display: flex; align-items: center; gap: 10px;
+    transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.22,1,0.36,1); z-index: 3000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-icon { width: 20px; height: 20px; border-radius: 50%; background: #6b9b6b; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+
+@media (max-width: 768px) {
+    .nav { padding: 0 20px; }
+    .container { padding: 40px 20px; }
+    .hero-title { font-size: 36px; }
+    .stats { gap: 40px; }
+    .gallery { grid-template-columns: 1fr; }
+    .collage-container { column-count: 1; -webkit-column-count: 1; -moz-column-count: 1; }
+    .nav-link { display: none; }
+    .slideshow-container { max-width: 100%; height: 500px; }
+    .flip-nav { width: 45px; height: 45px; font-size: 16px; }
+    .flip-prev { left: -22px; }
+    .flip-next { right: -22px; }
+    .toast { right: 16px; left: 16px; bottom: 16px; }
+}
+</style>
 </head>
 <body>
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
+
     <div class="header">
         <nav class="nav">
             <div class="logo">Gallery</div>
@@ -612,7 +302,6 @@
         <div class="hero-section">
             <h1 class="hero-title">Personal Collection</h1>
             <p class="hero-subtitle">Curated Visual Stories</p>
-            
             <div class="stats">
                 <div class="stat-item">
                     <div class="stat-number" id="photoCount">00</div>
@@ -635,14 +324,15 @@
             </div>
             <button class="flip-nav flip-prev" onclick="flipPrevPage()">‹</button>
             <button class="flip-nav flip-next" onclick="flipNextPage()">›</button>
-            <div class="page-indicator">
-                <div class="page-counter" id="pageCounter">1 / 1</div>
-            </div>
+            <div class="page-indicator"><div class="page-counter" id="pageCounter">1 / 1</div></div>
         </div>
 
+        <div class="collage-container" id="collageContainer"></div>
+
         <div class="view-toggle">
-            <button class="toggle-btn" id="slideshowToggle" onclick="toggleView('slideshow')">Slideshow</button>
             <button class="toggle-btn active" id="galleryToggle" onclick="toggleView('gallery')">Gallery</button>
+            <button class="toggle-btn" id="collageToggle" onclick="toggleView('collage')">Collage</button>
+            <button class="toggle-btn" id="slideshowToggle" onclick="toggleView('slideshow')">Slideshow</button>
         </div>
 
         <div class="upload-area" onclick="document.getElementById('fileInput').click()">
@@ -671,13 +361,433 @@
 
     <div class="modal" id="modal">
         <span class="modal-close" onclick="closeModal()">&times;</span>
-        <div class="modal-content">
-            <img id="modalImg">
-        </div>
+        <div class="modal-content"><img id="modalImg"></div>
+    </div>
+
+    <div class="toast" id="toast">
+        <div class="toast-icon">✓</div>
+        <span id="toastMessage">Photo added</span>
     </div>
 
     <script>
-        let photos=[];let totalSize=0;let currentSlide=0;let currentView='gallery';let autoSlideInterval;let db;function initIndexedDB(){return new Promise((resolve,reject)=>{const request=indexedDB.open('PhotoGalleryDB',2);request.onerror=()=>reject(request.error);request.onsuccess=()=>{db=request.result;console.log('✅ Database ready');resolve(db)};request.onupgradeneeded=(event)=>{db=event.target.result;if(!db.objectStoreNames.contains('photos')){const photosStore=db.createObjectStore('photos',{keyPath:'id'});photosStore.createIndex('uploadDate','uploadDate',{unique:false})}if(!db.objectStoreNames.contains('settings')){db.createObjectStore('settings',{keyPath:'key'})}}})}function savePhotoToDB(photo){return new Promise((resolve,reject)=>{const transaction=db.transaction(['photos'],'readwrite');const store=transaction.objectStore('photos');const request=store.put(photo);request.onsuccess=()=>resolve(photo);request.onerror=()=>reject(request.error)})}function loadPhotosFromDB(){return new Promise((resolve,reject)=>{const transaction=db.transaction(['photos'],'readonly');const store=transaction.objectStore('photos');const request=store.getAll();request.onsuccess=()=>{const loadedPhotos=request.result||[];loadedPhotos.sort((a,b)=>new Date(a.uploadDate)-new Date(b.uploadDate));resolve(loadedPhotos)};request.onerror=()=>reject(request.error)})}function deletePhotoFromDB(photoId){return new Promise((resolve,reject)=>{const transaction=db.transaction(['photos'],'readwrite');const store=transaction.objectStore('photos');const request=store.delete(photoId);request.onsuccess=()=>resolve();request.onerror=()=>reject(request.error)})}function saveSetting(key,value){return new Promise((resolve,reject)=>{const transaction=db.transaction(['settings'],'readwrite');const store=transaction.objectStore('settings');const request=store.put({key,value});request.onsuccess=()=>resolve();request.onerror=()=>reject(request.error)})}const fileInput=document.getElementById('fileInput');const gallery=document.getElementById('gallery');const slideshow=document.getElementById('slideshow');const bookContainer=document.getElementById('bookContainer');const modal=document.getElementById('modal');const modalImg=document.getElementById('modalImg');const photoCountEl=document.getElementById('photoCount');const storageSizeEl=document.getElementById('storageSize');const uploadArea=document.querySelector('.upload-area');const quoteBlock=document.getElementById('quoteBlock');document.getElementById('currentDate').textContent=new Date().getFullYear();fileInput.addEventListener('change',handleFiles);uploadArea.addEventListener('dragover',(e)=>{e.preventDefault();uploadArea.classList.add('dragover')});uploadArea.addEventListener('dragleave',()=>{uploadArea.classList.remove('dragover')});uploadArea.addEventListener('drop',(e)=>{e.preventDefault();uploadArea.classList.remove('dragover');handleFiles({target:{files:e.dataTransfer.files}})});async function handleFiles(event){const files=Array.from(event.target.files);for(const file of files){if(file.type.startsWith('image/')){try{await processImageFile(file)}catch(error){console.error('Error:',error)}}}fileInput.value=''}function processImageFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=async function(e){const photo={id:Date.now()+'-'+Math.random().toString(36).substr(2,9),name:file.name.replace(/\.[^/.]+$/,""),src:e.target.result,size:file.size,uploadDate:new Date().toISOString(),date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),uploadTime:new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'})};try{await savePhotoToDB(photo);photos.push(photo);totalSize+=file.size;await saveSetting('totalSize',totalSize);renderGallery();renderSlideshow();updateStats();resolve(photo)}catch(error){reject(error)}};reader.onerror=()=>reject(new Error('File read error'));reader.readAsDataURL(file)})}function toggleView(view){const slideshowToggle=document.getElementById('slideshowToggle');const galleryToggle=document.getElementById('galleryToggle');if(view==='slideshow'&&photos.length>0){currentView='slideshow';slideshow.classList.add('active');gallery.style.display='none';slideshowToggle.classList.add('active');galleryToggle.classList.remove('active');smoothScrollToElement(slideshow);startAutoSlide()}else{currentView='gallery';slideshow.classList.remove('active');gallery.style.display='grid';slideshowToggle.classList.remove('active');galleryToggle.classList.add('active');smoothScrollToElement(gallery);stopAutoSlide()}}function renderSlideshow(){if(photos.length===0)return;const spine=bookContainer.querySelector('.book-spine');bookContainer.innerHTML='';bookContainer.appendChild(spine);photos.forEach((photo,index)=>{const page=document.createElement('div');page.className=`page ${index>0?'flipped':''}`;page.setAttribute('data-page',index);page.innerHTML=`<div class="page-content"><img src="${photo.src}" alt="${photo.name}"><div class="page-number">${String(index+1).padStart(2,'0')}</div></div>`;bookContainer.appendChild(page)});currentSlide=0;updatePageCounter()}function flipNextPage(){if(currentSlide<photos.length-1){const currentPage=document.querySelector(`[data-page="${currentSlide}"]`);if(currentPage){currentPage.classList.add('flipping');setTimeout(()=>{currentPage.classList.add('flipped');currentPage.classList.remove('flipping');currentSlide++;updatePageCounter()},500)}}else if(photos.length>1){resetSlideshow()}}function flipPrevPage(){if(currentSlide>0){currentSlide--;const currentPage=document.querySelector(`[data-page="${currentSlide}"]`);if(currentPage){currentPage.classList.add('flipping');setTimeout(()=>{currentPage.classList.remove('flipped');currentPage.classList.remove('flipping');updatePageCounter()},500)}}}function resetSlideshow(){photos.forEach((_,index)=>{const page=document.querySelector(`[data-page="${index}"]`);if(page&&index>0){setTimeout(()=>{page.classList.remove('flipped')},index*100)}});currentSlide=0;setTimeout(()=>updatePageCounter(),photos.length*100)}function updatePageCounter(){const counter=document.getElementById('pageCounter');if(counter&&photos.length>0){counter.textContent=`${currentSlide+1} / ${photos.length}`}}function renderGallery(){if(photos.length===0){gallery.innerHTML=`<div class="empty-state"><div class="empty-icon">◯</div><div class="empty-title">Begin Your Collection</div><div class="empty-subtitle">Upload your first image to start</div></div>`;quoteBlock.style.display='none';return}quoteBlock.style.display='block';gallery.innerHTML=photos.map((photo,index)=>`<div class="photo-card"><div class="photo-container"><img src="${photo.src}" alt="${photo.name}" onclick="openModal('${photo.src}')"></div><button class="delete-btn" onclick="deletePhoto('${photo.id}')" title="Remove">×</button><div class="photo-info"><div class="photo-meta"><div class="photo-number">${String(index+1).padStart(2,'0')}</div><div class="photo-date">${photo.uploadTime}<br>Est. 2025</div></div><div class="photo-title">${photo.name}</div><div class="photo-description">Added on ${photo.date}</div></div></div>`).join('')}async function deletePhoto(id){const photoIndex=photos.findIndex(p=>p.id===id);if(photoIndex>-1){const photo=photos[photoIndex];try{await deletePhotoFromDB(id);totalSize-=photo.size;photos.splice(photoIndex,1);await saveSetting('totalSize',totalSize);renderGallery();renderSlideshow();updateStats();if(photos.length===0){toggleView('gallery')}if(currentSlide>=photos.length&&photos.length>0){currentSlide=photos.length-1;updatePageCounter()}}catch(error){console.error('Error:',error)}}}function updateStats(){photoCountEl.textContent=String(photos.length).padStart(2,'0');storageSizeEl.textContent=(totalSize/(1024*1024)).toFixed(1)}function openModal(src){modalImg.src=src;modal.style.display='block';document.body.style.overflow='hidden'}function closeModal(){modal.style.display='none';document.body.style.overflow='auto'}function smoothScrollToElement(element){element.scrollIntoView({behavior:'smooth',block:'start'})}function startAutoSlide(){if(autoSlideInterval)clearInterval(autoSlideInterval);autoSlideInterval=setInterval(()=>{if(currentView==='slideshow'&&photos.length>1){flipNextPage()}},4000)}function stopAutoSlide(){if(autoSlideInterval){clearInterval(autoSlideInterval);autoSlideInterval=null}}modal.addEventListener('click',(e)=>{if(e.target===modal){closeModal()}});document.addEventListener('keydown',(e)=>{if(currentView==='slideshow'&&photos.length>0){if(e.key==='ArrowLeft'){flipPrevPage()}else if(e.key==='ArrowRight'){flipNextPage()}}if(e.key==='Escape'){closeModal()}});let touchStartX=0;let touchEndX=0;slideshow.addEventListener('touchstart',(e)=>{touchStartX=e.changedTouches[0].screenX});slideshow.addEventListener('touchend',(e)=>{touchEndX=e.changedTouches[0].screenX;const diff=touchStartX-touchEndX;if(Math.abs(diff)>50){if(diff>0){flipNextPage()}else{flipPrevPage()}}});slideshow.addEventListener('mouseenter',stopAutoSlide);slideshow.addEventListener('mouseleave',()=>{if(currentView==='slideshow')startAutoSlide()});async function initializeApp(){try{await initIndexedDB();const loadedPhotos=await loadPhotosFromDB();photos=loadedPhotos;totalSize=photos.reduce((sum,photo)=>sum+(photo.size||0),0);renderGallery();renderSlideshow();updateStats();console.log(`✅ ${photos.length} photos loaded`)}catch(error){console.error('❌ Init error:',error);photos=[];totalSize=0;updateStats()}}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initializeApp)}else{initializeApp()}
+        let photos = [];
+        let totalSize = 0;
+        let currentSlide = 0;
+        let currentView = 'gallery';
+        let autoSlideInterval;
+        let toastTimeout;
+        let db;
+
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('PhotoGalleryDB', 2);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => { db = request.result; resolve(db); };
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains('photos')) {
+                        const store = db.createObjectStore('photos', { keyPath: 'id' });
+                        store.createIndex('uploadDate', 'uploadDate', { unique: false });
+                    }
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+
+        function savePhotoToDB(photo) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['photos'], 'readwrite');
+                const req = tx.objectStore('photos').put(photo);
+                req.onsuccess = () => resolve(photo);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function loadPhotosFromDB() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['photos'], 'readonly');
+                const req = tx.objectStore('photos').getAll();
+                req.onsuccess = () => {
+                    const result = (req.result || []).sort((a, b) => new Date(a.uploadDate) - new Date(b.uploadDate));
+                    resolve(result);
+                };
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function deletePhotoFromDB(id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['photos'], 'readwrite');
+                const req = tx.objectStore('photos').delete(id);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function saveSetting(key, value) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(['settings'], 'readwrite');
+                const req = tx.objectStore('settings').put({ key, value });
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        const fileInput = document.getElementById('fileInput');
+        const gallery = document.getElementById('gallery');
+        const collageContainer = document.getElementById('collageContainer');
+        const slideshow = document.getElementById('slideshow');
+        const bookContainer = document.getElementById('bookContainer');
+        const modal = document.getElementById('modal');
+        const modalImg = document.getElementById('modalImg');
+        const photoCountEl = document.getElementById('photoCount');
+        const storageSizeEl = document.getElementById('storageSize');
+        const uploadArea = document.querySelector('.upload-area');
+        const quoteBlock = document.getElementById('quoteBlock');
+        const galleryToggle = document.getElementById('galleryToggle');
+        const collageToggle = document.getElementById('collageToggle');
+        const slideshowToggle = document.getElementById('slideshowToggle');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        document.getElementById('currentDate').textContent = new Date().getFullYear();
+
+        fileInput.addEventListener('change', handleFiles);
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFiles({ target: { files: e.dataTransfer.files } });
+        });
+
+        async function handleFiles(event) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                if (file.type.startsWith('image/')) {
+                    try { await processImageFile(file); }
+                    catch (err) { console.error('Error processing file:', err); }
+                }
+            }
+            fileInput.value = '';
+        }
+
+        function processImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    const photo = {
+                        id: Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+                        name: file.name.replace(/\.[^/.]+$/, ''),
+                        src: e.target.result,
+                        size: file.size,
+                        uploadDate: new Date().toISOString(),
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                        uploadTime: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                    };
+                    try {
+                        await savePhotoToDB(photo);
+                        photos.push(photo);
+                        totalSize += file.size;
+                        await saveSetting('totalSize', totalSize);
+
+                        renderGallery();
+                        renderCollage();
+                        renderSlideshow();
+                        updateStats();
+                        showToast(`Added "${photo.name}"`);
+
+                        resolve(photo);
+                    } catch (err) { reject(err); }
+                };
+                reader.onerror = () => reject(new Error('File read error'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function toggleView(view) {
+            if (view === 'slideshow' && photos.length === 0) view = 'gallery';
+            currentView = view;
+
+            gallery.style.display = view === 'gallery' ? 'grid' : 'none';
+            galleryToggle.classList.toggle('active', view === 'gallery');
+
+            collageContainer.style.display = view === 'collage' ? 'block' : 'none';
+            collageToggle.classList.toggle('active', view === 'collage');
+
+            if (view === 'slideshow') {
+                slideshow.classList.add('active');
+                startAutoSlide();
+            } else {
+                slideshow.classList.remove('active');
+                stopAutoSlide();
+            }
+            slideshowToggle.classList.toggle('active', view === 'slideshow');
+
+            const target = view === 'collage' ? collageContainer : view === 'slideshow' ? slideshow : gallery;
+            smoothScrollToElement(target);
+        }
+
+        function renderGallery() {
+            if (photos.length === 0) {
+                gallery.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">◯</div>
+                        <div class="empty-title">Begin Your Collection</div>
+                        <div class="empty-subtitle">Upload your first image to start</div>
+                    </div>`;
+                quoteBlock.style.display = 'none';
+                return;
+            }
+            quoteBlock.style.display = 'block';
+            gallery.innerHTML = photos.map((photo, index) => `
+                <div class="photo-card animate-in" style="animation-delay:${index * 0.06}s">
+                    <div class="photo-container">
+                        <img src="${photo.src}" alt="${photo.name}" onclick="openModal('${photo.src}')">
+                    </div>
+                    <button class="delete-btn" onclick="deletePhoto('${photo.id}')" title="Remove from collection">×</button>
+                    <div class="photo-info">
+                        <div class="photo-meta">
+                            <div class="photo-number">${String(index + 1).padStart(2, '0')}</div>
+                            <div class="photo-date">${photo.uploadTime}<br>Est. 2025</div>
+                        </div>
+                        <div class="photo-title">${photo.name}</div>
+                        <div class="photo-description">Added to personal collection on ${photo.date}. Part of the curated visual archive.</div>
+                    </div>
+                </div>`).join('');
+        }
+
+        function hashRotation(id) {
+            let hash = 0;
+            const str = String(id);
+            for (let i = 0; i < str.length; i++) { hash = (hash * 31 + str.charCodeAt(i)) >>> 0; }
+            return (hash % 13) - 6;
+        }
+
+        function renderCollage() {
+            if (photos.length === 0) {
+                collageContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">◯</div>
+                        <div class="empty-title">Begin Your Collection</div>
+                        <div class="empty-subtitle">Upload your first image to start</div>
+                    </div>`;
+                return;
+            }
+            collageContainer.innerHTML = photos.map((photo, index) => {
+                const rot = hashRotation(photo.id);
+                return `
+                    <div class="collage-item animate-in" style="--rot:${rot}deg; animation-delay:${index * 0.06}s" data-id="${photo.id}">
+                        <div class="collage-pin"></div>
+                        <img src="${photo.src}" alt="${photo.name}" onclick="openModal('${photo.src}')">
+                        <div class="collage-caption">${photo.name}</div>
+                        <button class="delete-btn" onclick="deletePhoto('${photo.id}')" title="Remove from collection">×</button>
+                    </div>`;
+            }).join('');
+
+            collageContainer.querySelectorAll('.collage-item').forEach(el => {
+                const baseRot = el.style.getPropertyValue('--rot') || '0deg';
+                el.addEventListener('mousemove', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+                    const rotateY = ((x - rect.width / 2) / rect.width) * 16;
+                    const rotateX = -((y - rect.height / 2) / rect.height) * 16;
+                    el.style.transform = `rotate(${baseRot}) scale(1.06) translateY(-8px) perspective(700px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                });
+                el.addEventListener('mouseleave', () => { el.style.transform = ''; });
+            });
+        }
+
+        function renderSlideshow() {
+            if (photos.length === 0) return;
+            const spine = bookContainer.querySelector('.book-spine');
+            bookContainer.innerHTML = '';
+            bookContainer.appendChild(spine);
+
+            photos.forEach((photo, index) => {
+                const page = document.createElement('div');
+                page.className = `page ${index > 0 ? 'flipped' : ''}`;
+                page.setAttribute('data-page', index);
+                page.innerHTML = `
+                    <div class="page-content">
+                        <img src="${photo.src}" alt="${photo.name}">
+                        <div class="page-number">${String(index + 1).padStart(2, '0')}</div>
+                    </div>`;
+                bookContainer.appendChild(page);
+            });
+
+            currentSlide = 0;
+            updatePageCounter();
+        }
+
+        function flipNextPage() {
+            if (currentSlide < photos.length - 1) {
+                const page = document.querySelector(`[data-page="${currentSlide}"]`);
+                if (page) {
+                    page.classList.add('flipping');
+                    setTimeout(() => {
+                        page.classList.add('flipped');
+                        page.classList.remove('flipping');
+                        currentSlide++;
+                        updatePageCounter();
+                    }, 500);
+                }
+            } else if (photos.length > 1) {
+                resetSlideshow();
+            }
+        }
+
+        function flipPrevPage() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                const page = document.querySelector(`[data-page="${currentSlide}"]`);
+                if (page) {
+                    page.classList.add('flipping');
+                    setTimeout(() => {
+                        page.classList.remove('flipped');
+                        page.classList.remove('flipping');
+                        updatePageCounter();
+                    }, 500);
+                }
+            }
+        }
+
+        function resetSlideshow() {
+            photos.forEach((_, index) => {
+                const page = document.querySelector(`[data-page="${index}"]`);
+                if (page && index > 0) setTimeout(() => page.classList.remove('flipped'), index * 100);
+            });
+            currentSlide = 0;
+            setTimeout(updatePageCounter, photos.length * 100);
+        }
+
+        function updatePageCounter() {
+            const counter = document.getElementById('pageCounter');
+            if (counter && photos.length > 0) counter.textContent = `${currentSlide + 1} / ${photos.length}`;
+        }
+
+        async function deletePhoto(id) {
+            const index = photos.findIndex(p => p.id === id);
+            if (index === -1) return;
+            const photo = photos[index];
+            try {
+                await deletePhotoFromDB(id);
+                totalSize -= photo.size;
+                photos.splice(index, 1);
+                await saveSetting('totalSize', totalSize);
+
+                renderGallery();
+                renderCollage();
+                renderSlideshow();
+                updateStats();
+                showToast(`Removed "${photo.name}"`);
+
+                if (photos.length === 0) toggleView('gallery');
+                if (currentSlide >= photos.length && photos.length > 0) {
+                    currentSlide = photos.length - 1;
+                    updatePageCounter();
+                }
+            } catch (err) { console.error('Error deleting photo:', err); }
+        }
+
+        function animateCount(el, to, decimals) {
+            const from = parseFloat(el.textContent) || 0;
+            const duration = 600;
+            const start = performance.now();
+            function tick(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const value = from + (to - from) * eased;
+                el.textContent = decimals ? value.toFixed(decimals) : String(Math.round(value)).padStart(2, '0');
+                if (progress < 1) requestAnimationFrame(tick);
+                else el.textContent = decimals ? to.toFixed(decimals) : String(to).padStart(2, '0');
+            }
+            requestAnimationFrame(tick);
+            el.classList.add('pulse');
+            setTimeout(() => el.classList.remove('pulse'), 400);
+        }
+
+        function updateStats() {
+            animateCount(photoCountEl, photos.length, 0);
+            animateCount(storageSizeEl, totalSize / (1024 * 1024), 1);
+        }
+
+        function openModal(src) {
+            modalImg.src = src;
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeModal() {
+            modal.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        }
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        function smoothScrollToElement(element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function startAutoSlide() {
+            if (autoSlideInterval) clearInterval(autoSlideInterval);
+            autoSlideInterval = setInterval(() => {
+                if (currentView === 'slideshow' && photos.length > 1) flipNextPage();
+            }, 4500);
+        }
+        function stopAutoSlide() {
+            if (autoSlideInterval) { clearInterval(autoSlideInterval); autoSlideInterval = null; }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (currentView === 'slideshow' && photos.length > 0) {
+                if (e.key === 'ArrowLeft') flipPrevPage();
+                else if (e.key === 'ArrowRight') flipNextPage();
+            }
+            if (e.key === 'Escape') closeModal();
+        });
+
+        let touchStartX = 0, touchEndX = 0;
+        slideshow.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+        slideshow.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) { diff > 0 ? flipNextPage() : flipPrevPage(); }
+        });
+
+        slideshow.addEventListener('mouseenter', stopAutoSlide);
+        slideshow.addEventListener('mouseleave', () => { if (currentView === 'slideshow') startAutoSlide(); });
+
+        async function initializeApp() {
+            try {
+                await initIndexedDB();
+                photos = await loadPhotosFromDB();
+                totalSize = photos.reduce((sum, p) => sum + (p.size || 0), 0);
+
+                renderGallery();
+                renderCollage();
+                renderSlideshow();
+                updateStats();
+            } catch (err) {
+                console.error('Failed to initialize:', err);
+                photos = [];
+                totalSize = 0;
+                updateStats();
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
     </script>
 </body>
 </html>
